@@ -23,14 +23,8 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-
-		/**
-		 * Say a 'Hello' action.
-		 *
-		 * @returns
-		 */
-		index: {
-			cache: false,
+		history: {
+			cache: true,
 			rest: {
 				method: "GET",
 				path: "/history"
@@ -43,7 +37,7 @@ module.exports = {
 			},
 			timeout: 15 * 1000,
 			async handler(ctx) {
-				const browser = await puppeteer.launch({headless: false});
+				const browser = await puppeteer.launch({headless: true});
 				try {
 					const page = await browser.newPage();
 

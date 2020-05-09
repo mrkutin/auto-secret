@@ -30,7 +30,7 @@ module.exports = {
 		 * @returns
 		 */
 		index: {
-			cache: true,
+			cache: false,
 			rest: {
 				method: "GET",
 				path: "/history"
@@ -39,7 +39,6 @@ module.exports = {
 				vin: {
 					type: "string",
 					length: 17,
-					pattern: /^(?<wmi>[A-HJ-NPR-Z\d]{3})(?<vds>[A-HJ-NPR-Z\d]{5})(?<check>[\dX])(?<vis>(?<year>[A-HJ-NPR-Z\d])(?<plant>[A-HJ-NPR-Z\d])(?<seq>[A-HJ-NPR-Z\d]{6}))$/
 				},
 			},
 			timeout: 15 * 1000,
@@ -69,7 +68,25 @@ module.exports = {
 					const powerKwtHp = await page.$eval(".vehicle-powerKwtHp", el => el.innerText);
 					const type = await page.$eval(".vehicle-type", el => el.innerText);
 
-					//todo await page.waitForSelector('.ownershipPeriods'); > li.last-owner > .ownershipPeriods-from, ownershipPeriods-to, simplePersonType, <div>Последняя операция - первичная регистрация</div>
+					await page.waitForSelector(".ownershipPeriods");
+					const periods = await page.$$(".ownershipPeriods > li");
+
+					const ownershipPeriods = [];
+					for (let i = 0; i < periods.length; i++) {
+						const fromSelector = await periods[i].$(".ownershipPeriods-from");
+						const from = await page.evaluate(el => el.innerText, fromSelector);
+						const toSelector = await periods[i].$(".ownershipPeriods-to");
+						const to = await page.evaluate(el => el.innerText, toSelector);
+						const personTypeSelector = await periods[i].$(".simplePersonType");
+						const personType = await page.evaluate(el => el.innerText, personTypeSelector);
+						ownershipPeriods.push(
+							{
+								from,
+								to,
+								personType,
+							}
+						);
+					}
 
 					return {
 						vin,
@@ -81,6 +98,7 @@ module.exports = {
 						engineVolume,
 						powerKwtHp,
 						type,
+						ownershipPeriods,
 					};
 				} finally {
 					await browser.close();
